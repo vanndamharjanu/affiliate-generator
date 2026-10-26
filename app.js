@@ -38,6 +38,11 @@ const analyzeBtn = document.getElementById("analyzeBtn");
 
 const analysisSection = document.getElementById("analysisSection");
 const nicheOverview = document.getElementById("nicheOverview");
+const scheduleDaySelect = document.getElementById("scheduleDaySelect");
+const scheduleNicheSelect = document.getElementById("scheduleNicheSelect");
+const scheduleRealtimeBanner = document.getElementById("scheduleRealtimeBanner");
+const scheduleDayBehavior = document.getElementById("scheduleDayBehavior");
+const scheduleGrid = document.getElementById("scheduleGrid");
 const contentToneSelect = document.getElementById("contentTone");
 const pronounStyleSelect = document.getElementById("pronounStyle");
 const storyDepthSelect = document.getElementById("storyDepth");
@@ -52,9 +57,747 @@ const historyList = document.getElementById("historyList");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 const toastEl = document.getElementById("toast");
 
+// ============================================================================
+// BANK DATA JAM UPLOAD TERBAIK AFFILIATE INDONESIA (WIB)
+// Berdasarkan Niche Audiens x Pola Hari (Senin-Minggu) x Algoritma Platform
+// ============================================================================
+const INDONESIAN_DAYS = [
+  { index: 0, name: "Minggu", group: "sunday", mood: "Hari Rebahan & Puncak Checkout Keranjang Shopee sebelum masuk kerja/sekolah hari Senin." },
+  { index: 1, name: "Senin", group: "weekday", mood: "Awal minggu sibuk. Audiens cari pelarian stres kerja di jam makan siang & rebahan malam." },
+  { index: 2, name: "Selasa", group: "weekday", mood: "Ritme harian paling stabil. Jam istirahat siang & prime time malam punya rasio baca utas tertinggi." },
+  { index: 3, name: "Rabu", group: "weekday", mood: "Pertengahan minggu (Hump Day). Mood belanja impulsif mulai naik di sore & malam hari." },
+  { index: 4, name: "Kamis", group: "weekday", mood: "Persiapan akhir pekan. Audiens aktif cari rekomendasi produk di malam hari (20:00+)." },
+  { index: 5, name: "Jumat", group: "friday", mood: "Pola unik Indonesia: Istirahat siang lebih panjang (momen Jumatan) & malam TGIF bergeser lebih larut." },
+  { index: 6, name: "Sabtu", group: "saturday", mood: "Pagi lebih santai, siang-sore banyak aktivitas luar rumah, lalu aktif kembali di malam minggu." },
+];
+
+const AFFILIATE_POSTING_SCHEDULE_DB = {
+  home_living: {
+    label: "🏠 Home Living, Kebersihan & Dapur (Ibu Rumah Tangga)",
+    keywords: ["rumah", "dapur", "kebersihan", "kerak", "kamar mandi", "masak", "sapu", "pel", "bunda", "moms", "ibu rumah tangga", "home", "living", "laundry", "setrika", "panci", "wajan", "rak", "organizer"],
+    audienceHabit: "Ibu rumah tangga beres urus rumah/masak pagi sekitar pukul 09:00, rebahan siang pukul 13:00, dan santai malam pukul 19:30–21:30.",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "09:00", end: "10:30", label: "Selesai kerjaan rumah pagi (Rebahan pagi)" },
+          { start: "13:00", end: "14:15", label: "Jam istirahat siang sambil scroll" },
+          { start: "19:30", end: "21:15", label: "🔥 Prime Time: Santai malam keluarga" },
+        ],
+        tiktok: [
+          { start: "08:45", end: "10:15", label: "Cari inspirasi beres-beres & resep" },
+          { start: "12:30", end: "14:00", label: "Scroll FYP siang hari" },
+          { start: "19:00", end: "21:00", label: "🔥 Prime Time: Checkout keranjang kuning" },
+        ],
+        facebook: [
+          { start: "08:30", end: "10:30", label: "🔥 Emak-emak aktif di Grup/Beranda FB" },
+          { start: "13:00", end: "14:30", label: "Rame diskusi & komentar siang" },
+          { start: "19:15", end: "21:00", label: "Santai malam baca cerita panjang" },
+        ],
+        whatsapp: [
+          { start: "07:30", end: "09:00", label: "Cek WA grup sekolah/komplek pagi" },
+          { start: "12:30", end: "13:30", label: "Buka Status WA sambil istirahat" },
+          { start: "19:30", end: "20:45", label: "🔥 Prime Time Status & Saluran WA" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "09:00", end: "10:30", label: "Beres masak pagi" },
+          { start: "13:00", end: "14:30", label: "Siang tenang pasca Jumatan" },
+          { start: "20:00", end: "21:45", label: "🔥 Prime Time Jumat Malam" },
+        ],
+        tiktok: [
+          { start: "09:00", end: "10:30", label: "Pemanasan FYP Jumat pagi" },
+          { start: "13:00", end: "14:30", label: "Siang santai scroll video" },
+          { start: "19:30", end: "21:30", label: "🔥 Prime Time: Persiapan beres rumah weekend" },
+        ],
+        facebook: [
+          { start: "08:30", end: "10:30", label: "Aktif pagi di beranda FB" },
+          { start: "13:15", end: "14:45", label: "🔥 Ramai interaksi siang Jumat" },
+          { start: "19:30", end: "21:15", label: "Malam santai" },
+        ],
+        whatsapp: [
+          { start: "08:00", end: "09:30", label: "Jumat berkah / sapaan pagi" },
+          { start: "13:00", end: "14:00", label: "Cek Status WA siang" },
+          { start: "19:30", end: "21:00", label: "🔥 Prime Time WA Malam" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "08:30", end: "10:00", label: "Pagi akhir pekan sambil beberes" },
+          { start: "13:30", end: "15:00", label: "Siang santai di rumah" },
+          { start: "20:00", end: "21:45", label: "🔥 Malam minggu santai" },
+        ],
+        tiktok: [
+          { start: "08:30", end: "10:30", label: "Cari alat kebersihan weekend" },
+          { start: "13:00", end: "14:30", label: "Siang rebahan" },
+          { start: "19:30", end: "21:30", label: "🔥 Prime Time Malam Minggu" },
+        ],
+        facebook: [
+          { start: "08:00", end: "10:00", label: "🔥 Pagi akhir pekan ramai di FB" },
+          { start: "13:30", end: "15:00", label: "Siang santai" },
+          { start: "19:30", end: "21:00", label: "Malam keluarga" },
+        ],
+        whatsapp: [
+          { start: "08:00", end: "09:30", label: "Cek Status WA Sabtu pagi" },
+          { start: "13:00", end: "14:30", label: "Siang akhir pekan" },
+          { start: "19:30", end: "21:00", label: "🔥 Prime Time WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "09:00", end: "11:00", label: "Minggu pagi beres-beres rumah" },
+          { start: "13:30", end: "15:00", label: "Rebahan Minggu siang" },
+          { start: "19:15", end: "21:15", label: "🔥 Puncak Checkout sebelum hari Senin" },
+        ],
+        tiktok: [
+          { start: "09:00", end: "11:00", label: "FYP Minggu pagi" },
+          { start: "13:00", end: "15:00", label: "Scroll siang di rumah" },
+          { start: "19:00", end: "21:15", label: "🔥 Prime Time Checkout Minggu Malam" },
+        ],
+        facebook: [
+          { start: "08:30", end: "10:30", label: "Minggu pagi santai" },
+          { start: "13:00", end: "15:00", label: "🔥 Siang ramai ibu-ibu di rumah" },
+          { start: "19:00", end: "21:00", label: "Malam persiapan Senin" },
+        ],
+        whatsapp: [
+          { start: "08:30", end: "10:00", label: "Status WA Minggu pagi" },
+          { start: "13:00", end: "14:30", label: "Siang rebahan" },
+          { start: "19:00", end: "20:45", label: "🔥 Prime Time Minggu Malam" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Gunakan cerita keluhan beres-beres rumah yang bikin pegel, lalu pancing komentar dengan tanya kebiasaan Bunda lain.",
+      tiktok: "Upload 30 menit sebelum jam ramai. Tampilkan visual 'Before-After' kotor vs bersih di 3 detik pertama.",
+      facebook: "Sangat kuat di FB Pro & Grup Rumah Tangga. Gunakan cerita 2-3 paragraf, taruh link di komentar paling akhir.",
+      whatsapp: "Pasang Status WA gambar/video hasil bersihnya dulu, baru 3 menit kemudian pasang status ke-2 berisi link Shopee.",
+    },
+  },
+
+  beauty_fashion: {
+    label: "💄 Skincare, Makeup, Fashion & OOTD",
+    keywords: ["skincare", "makeup", "wajah", "jerawat", "glowing", "baju", "hijab", "jilbab", "celana", "sepatu", "tas", "ootd", "fashion", "parfum", "body", "serum", "moisturizer", "sunscreen", "lip", "dress", "kemeja"],
+    audienceHabit: "Audiens aktif saat siap-siap pagi (07:00), jam makan siang sambil cari racun OOTD (12:00), dan puncak galau/skincare routine malam (20:00–22:30).",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "07:15", end: "08:30", label: "Commuting / siap-siap pagi" },
+          { start: "12:00", end: "13:15", label: "Istirahat makan siang cari racun" },
+          { start: "20:00", end: "22:15", label: "🔥 Prime Time: Me-time & skincare malam" },
+        ],
+        tiktok: [
+          { start: "11:45", end: "13:15", label: "Jam makan siang (Spill OOTD/Makeup)" },
+          { start: "16:45", end: "18:00", label: "Jam pulang kerja/kuliah" },
+          { start: "19:30", end: "22:00", label: "🔥 Prime Time: Rawan impulsif checkout" },
+        ],
+        facebook: [
+          { start: "09:00", end: "10:30", label: "Pagi menjelang siang" },
+          { start: "12:30", end: "13:45", label: "Istirahat siang" },
+          { start: "19:30", end: "21:30", label: "🔥 Prime Time malam" },
+        ],
+        whatsapp: [
+          { start: "07:30", end: "08:45", label: "Cek HP pagi" },
+          { start: "12:15", end: "13:15", label: "Jam makan siang" },
+          { start: "20:00", end: "21:30", label: "🔥 Prime Time Status WA" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "07:30", end: "08:45", label: "Jumat pagi semangat weekend" },
+          { start: "11:45", end: "13:30", label: "Istirahat siang panjang" },
+          { start: "20:30", end: "23:00", label: "🔥 Prime Time TGIF (Belanja buat weekend)" },
+        ],
+        tiktok: [
+          { start: "11:30", end: "13:30", label: "Siang Jumat cari outfit" },
+          { start: "17:00", end: "18:30", label: "Pulang kerja TGIF" },
+          { start: "20:00", end: "22:45", label: "🔥 Prime Time Jumat Malam" },
+        ],
+        facebook: [
+          { start: "09:30", end: "11:00", label: "Pagi Jumat" },
+          { start: "13:00", end: "14:30", label: "Siang Jumat" },
+          { start: "20:00", end: "22:00", label: "🔥 Malam akhir pekan" },
+        ],
+        whatsapp: [
+          { start: "12:00", end: "13:30", label: "Siang Jumat" },
+          { start: "17:00", end: "18:15", label: "Sore pulang kerja" },
+          { start: "20:00", end: "21:45", label: "🔥 Prime Time WA" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "09:30", end: "11:00", label: "Sabtu pagi siap-siap jalan" },
+          { start: "15:30", end: "17:00", label: "Sore santai" },
+          { start: "20:30", end: "22:45", label: "🔥 Malam minggu scroll utas" },
+        ],
+        tiktok: [
+          { start: "09:30", end: "11:30", label: "GRWM (Get Ready With Me) Sabtu pagi" },
+          { start: "15:00", end: "16:30", label: "Sore akhir pekan" },
+          { start: "20:00", end: "22:30", label: "🔥 Prime Time Malam Minggu" },
+        ],
+        facebook: [
+          { start: "09:00", end: "11:00", label: "Sabtu pagi" },
+          { start: "14:00", end: "15:30", label: "Siang akhir pekan" },
+          { start: "19:45", end: "21:30", label: "🔥 Malam minggu" },
+        ],
+        whatsapp: [
+          { start: "09:00", end: "10:30", label: "Pagi akhir pekan" },
+          { start: "16:00", end: "17:30", label: "Sore santai" },
+          { start: "20:00", end: "21:30", label: "🔥 Prime Time Status WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "10:00", end: "11:30", label: "Minggu pagi santai" },
+          { start: "14:00", end: "16:00", label: "Rebahan Minggu sore" },
+          { start: "19:30", end: "22:00", label: "🔥 Puncak Checkout Skincare/Outfit Senin" },
+        ],
+        tiktok: [
+          { start: "10:00", end: "12:00", label: "Minggu siang rebahan" },
+          { start: "15:00", end: "17:00", label: "Sore di rumah" },
+          { start: "19:00", end: "21:45", label: "🔥 Prime Time Checkout Minggu Malam" },
+        ],
+        facebook: [
+          { start: "09:30", end: "11:00", label: "Minggu pagi" },
+          { start: "13:30", end: "15:30", label: "Minggu siang" },
+          { start: "19:30", end: "21:30", label: "🔥 Minggu malam" },
+        ],
+        whatsapp: [
+          { start: "09:30", end: "11:00", label: "Minggu pagi" },
+          { start: "15:00", end: "16:30", label: "Minggu sore" },
+          { start: "19:30", end: "21:00", label: "🔥 Prime Time Minggu Malam" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Angkat cerita jujur masalah kulit/susahnya cari ukuran baju yang pas di badan, hindari bahasa promosi katalog.",
+      tiktok: "Tunjukkan tekstur/pemakaian langsung di kulit atau try-on baju di cahaya terang pada 3 detik pertama.",
+      facebook: "Fokus pada perbandingan awetnya bahan atau penghematan uang dibanding beli produk mahal.",
+      whatsapp: "Gunakan foto cermin/real-pict pemakaian pribadi agar kontak WA langsung percaya.",
+    },
+  },
+
+  parenting_kids: {
+    label: "🍼 Parenting, Bayi, MPASI & Mainan Anak",
+    keywords: ["bayi", "anak", "balita", "mpasi", "popok", "mainan", "edukasi", "stroller", "botol susu", "asi", "bumil", "hamil", "parenting", "sekolah anak"],
+    audienceHabit: "Orang tua/Bunda punya waktu luang saat anak tidur siang (13:00–14:30) dan setelah anak tidur malam (20:30–22:30).",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "08:30", end: "10:00", label: "Anak sudah mandi & sarapan" },
+          { start: "13:00", end: "14:30", label: "🔥 Jam anak tidur siang (Bunda scroll HP)" },
+          { start: "20:30", end: "22:15", label: "🔥 Prime Time: Anak sudah tidur malam" },
+        ],
+        tiktok: [
+          { start: "08:30", end: "10:00", label: "Pagi cari ide MPASI / aktivitas anak" },
+          { start: "12:45", end: "14:15", label: "Jam tidur siang anak" },
+          { start: "20:00", end: "22:00", label: "🔥 Prime Time: Me-time Bunda belanja" },
+        ],
+        facebook: [
+          { start: "08:30", end: "10:00", label: "Pagi aktif di grup parenting FB" },
+          { start: "13:00", end: "14:30", label: "🔥 Siang sambil nidurin anak" },
+          { start: "20:00", end: "21:45", label: "Malam santai" },
+        ],
+        whatsapp: [
+          { start: "07:30", end: "09:00", label: "Pagi setelah antar anak sekolah" },
+          { start: "13:00", end: "14:00", label: "Siang istirahat" },
+          { start: "20:15", end: "21:30", label: "🔥 Prime Time Status WA" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "08:30", end: "10:00", label: "Jumat pagi" },
+          { start: "13:00", end: "14:30", label: "Jam tidur siang anak" },
+          { start: "20:30", end: "22:30", label: "🔥 Prime Time Jumat Malam" },
+        ],
+        tiktok: [
+          { start: "08:30", end: "10:00", label: "Pagi Jumat" },
+          { start: "13:00", end: "14:30", label: "Siang Jumat" },
+          { start: "20:00", end: "22:15", label: "🔥 Prime Time Malam" },
+        ],
+        facebook: [
+          { start: "08:30", end: "10:30", label: "Pagi Jumat" },
+          { start: "13:15", end: "14:45", label: "Siang Jumat" },
+          { start: "20:00", end: "21:45", label: "🔥 Malam santai" },
+        ],
+        whatsapp: [
+          { start: "08:00", end: "09:30", label: "Pagi Jumat" },
+          { start: "13:00", end: "14:15", label: "Siang" },
+          { start: "20:15", end: "21:30", label: "🔥 Prime Time WA" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "08:00", end: "09:30", label: "Sabtu pagi sebelum jalan keluarga" },
+          { start: "13:30", end: "15:00", label: "Anak tidur siang" },
+          { start: "20:30", end: "22:30", label: "🔥 Malam setelah anak tidur" },
+        ],
+        tiktok: [
+          { start: "08:00", end: "09:30", label: "Sabtu pagi" },
+          { start: "13:00", end: "14:30", label: "Siang akhir pekan" },
+          { start: "20:15", end: "22:15", label: "🔥 Prime Time Sabtu Malam" },
+        ],
+        facebook: [
+          { start: "08:00", end: "09:30", label: "Sabtu pagi" },
+          { start: "13:30", end: "15:00", label: "Siang" },
+          { start: "20:00", end: "21:45", label: "🔥 Sabtu Malam" },
+        ],
+        whatsapp: [
+          { start: "08:00", end: "09:30", label: "Pagi akhir pekan" },
+          { start: "13:30", end: "14:30", label: "Siang" },
+          { start: "20:00", end: "21:30", label: "🔥 Prime Time WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "08:30", end: "10:00", label: "Minggu pagi" },
+          { start: "13:30", end: "15:00", label: "Jam tidur siang anak" },
+          { start: "20:00", end: "22:00", label: "🔥 Puncak Checkout kebutuhan anak mingguan" },
+        ],
+        tiktok: [
+          { start: "08:30", end: "10:00", label: "Minggu pagi" },
+          { start: "13:00", end: "14:30", label: "Siang di rumah" },
+          { start: "19:45", end: "21:45", label: "🔥 Prime Time Minggu Malam" },
+        ],
+        facebook: [
+          { start: "08:30", end: "10:00", label: "Minggu pagi" },
+          { start: "13:00", end: "15:00", label: "Minggu siang" },
+          { start: "19:45", end: "21:30", label: "🔥 Minggu malam" },
+        ],
+        whatsapp: [
+          { start: "08:30", end: "10:00", label: "Minggu pagi" },
+          { start: "13:30", end: "14:30", label: "Minggu siang" },
+          { start: "19:45", end: "21:15", label: "🔥 Prime Time WA" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Ceritakan drama nyata ngurus anak (GTM, rewel, tantrum) dengan nada empati sesama orang tua.",
+      tiktok: "Tampilkan reaksi anak saat pakai produk/mainan tanpa wajah anak harus selalu terlihat penuh jika menjaga privasi.",
+      facebook: "Komentar emak-emak di FB sangat hidup jika di akhir post utama ditanya 'Anak Bunda di rumah gini juga gak?'",
+      whatsapp: "Sangat efektif karena teman di kontak WA biasanya tahu usia anak Anda dan punya kebutuhan serupa.",
+    },
+  },
+
+  gadget_otomotif: {
+    label: "🔧 Elektronik, Gadget, Otomotif & Pertukangan (Bapak-bapak)",
+    keywords: ["mobil", "motor", "helm", "oli", "obeng", "bor", "tukang", "alat", "kabel", "charger", "tws", "headset", "hp", "laptop", "elektronik", "lampu", "led", "pompa", "bapak", "otomotif", "speaker"],
+    audienceHabit: "Audiens pria/bapak-bapak aktif pagi sambil ngopi (06:30–08:00), jam istirahat kerja (12:00), dan begadang malam (20:30–23:00).",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "06:45", end: "08:00", label: "Ngopi pagi sebelum berangkat kerja" },
+          { start: "11:45", end: "13:00", label: "Jam istirahat makan siang kantor" },
+          { start: "20:30", end: "22:45", label: "🔥 Prime Time: Santai malam / ngopi di teras" },
+        ],
+        tiktok: [
+          { start: "11:45", end: "13:00", label: "Istirahat siang" },
+          { start: "17:00", end: "18:15", label: "Pulang kerja" },
+          { start: "20:00", end: "22:45", label: "🔥 Prime Time: Bapak-bapak keracunan alat" },
+        ],
+        facebook: [
+          { start: "07:00", end: "08:15", label: "Cek FB sambil ngopi pagi" },
+          { start: "12:00", end: "13:15", label: "Istirahat siang" },
+          { start: "20:00", end: "22:30", label: "🔥 Prime Time Grup/Beranda Bapak-bapak FB" },
+        ],
+        whatsapp: [
+          { start: "07:00", end: "08:15", label: "Cek grup WA pagi" },
+          { start: "12:00", end: "13:00", label: "Istirahat siang" },
+          { start: "20:00", end: "21:45", label: "🔥 Prime Time WA Malam" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "07:00", end: "08:15", label: "Ngopi Jumat pagi" },
+          { start: "13:00", end: "14:15", label: "🔥 Selesai Sholat Jumat & makan siang" },
+          { start: "20:30", end: "23:15", label: "🔥 Prime Time Jumat Malam (Begadang)" },
+        ],
+        tiktok: [
+          { start: "10:45", end: "11:30", label: "Menjelang istirahat Jumat" },
+          { start: "13:00", end: "14:15", label: "Setelah Jumatan" },
+          { start: "20:15", end: "23:00", label: "🔥 Prime Time TGIF Malam" },
+        ],
+        facebook: [
+          { start: "07:00", end: "08:30", label: "Pagi Jumat" },
+          { start: "13:00", end: "14:30", label: "🔥 Selesai Jumatan ramai buka FB" },
+          { start: "20:30", end: "23:00", label: "🔥 Malam Sabtu" },
+        ],
+        whatsapp: [
+          { start: "07:00", end: "08:15", label: "Pagi Jumat" },
+          { start: "13:00", end: "14:00", label: "Setelah Jumatan" },
+          { start: "20:15", end: "22:00", label: "🔥 Prime Time WA" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "07:30", end: "09:30", label: "🔥 Sabtu pagi (Waktu ngoprek/cuci motor/mobil)" },
+          { start: "13:00", end: "14:30", label: "Siang santai" },
+          { start: "20:30", end: "23:00", label: "🔥 Malam minggu" },
+        ],
+        tiktok: [
+          { start: "07:30", end: "09:30", label: "Pagi akhir pekan cari alat oprek" },
+          { start: "13:00", end: "14:30", label: "Siang" },
+          { start: "20:00", end: "22:45", label: "🔥 Prime Time Sabtu Malam" },
+        ],
+        facebook: [
+          { start: "07:30", end: "09:30", label: "🔥 Pagi ngopi & baca diskusi grup" },
+          { start: "13:30", end: "15:00", label: "Siang" },
+          { start: "20:00", end: "22:30", label: "Malam minggu" },
+        ],
+        whatsapp: [
+          { start: "07:30", end: "09:00", label: "Sabtu pagi" },
+          { start: "13:00", end: "14:30", label: "Siang" },
+          { start: "20:00", end: "21:45", label: "🔥 Prime Time WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "07:30", end: "09:30", label: "Minggu pagi beres-beres garasi/rumah" },
+          { start: "13:30", end: "15:00", label: "Minggu siang" },
+          { start: "20:00", end: "22:30", label: "🔥 Puncak Checkout Minggu Malam" },
+        ],
+        tiktok: [
+          { start: "08:00", end: "10:00", label: "Minggu pagi" },
+          { start: "13:00", end: "15:00", label: "Minggu siang" },
+          { start: "19:30", end: "22:15", label: "🔥 Prime Time Minggu Malam" },
+        ],
+        facebook: [
+          { start: "07:30", end: "09:30", label: "Minggu pagi" },
+          { start: "13:30", end: "15:00", label: "Minggu siang" },
+          { start: "19:30", end: "22:00", label: "🔥 Prime Time FB" },
+        ],
+        whatsapp: [
+          { start: "08:00", end: "09:30", label: "Minggu pagi" },
+          { start: "13:30", end: "15:00", label: "Minggu siang" },
+          { start: "19:30", end: "21:30", label: "🔥 Prime Time WA" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Bahas dari sisi fungsi praktis, hemat biaya servis/tukang, dan spesifikasi nyata yang gak kaleng-kaleng.",
+      tiktok: "Langsung demokan fungsi alat pada 3 detik pertama (misal: semprotan kencang, bor langsung tembus, lampu terang).",
+      facebook: "Bapak-bapak di FB suka tulisan bergaya pengalaman pribadi yang ngasih tips teknis gratis sebelum spill alat.",
+      whatsapp: "Cocok di-share ke grup WA hobi/komunitas/bapak-bapak komplek dengan bahasa santai.",
+    },
+  },
+
+  anak_kos_pekerja: {
+    label: "🎒 Kebutuhan Anak Kos, Dekorasi Kamar & Pekerja/WFC",
+    keywords: ["kos", "kost", "kamar", "meja", "kursi", "ergonomis", "kantor", "kerja", "kuliah", "mahasiswa", "praktis", "portable", "lipat", "sprei", "bantal", "kasur", "kipas", "lampu tidur", "colokan"],
+    audienceHabit: "Aktif saat commuting pagi (07:30), makan siang (12:00), pulang kerja (17:30), dan jam begadang anak kos/pekerja (21:00–23:30).",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "07:30", end: "08:45", label: "Di KRL/Transjakarta/ojol berangkat kerja" },
+          { start: "12:00", end: "13:15", label: "Makan siang bareng teman kantor/kampus" },
+          { start: "20:45", end: "23:00", label: "🔥 Prime Time: Rebahan di kamar kos" },
+        ],
+        tiktok: [
+          { start: "12:00", end: "13:15", label: "Jam makan siang" },
+          { start: "17:15", end: "18:30", label: "Perjalanan pulang kerja/kuliah" },
+          { start: "20:30", end: "23:00", label: "🔥 Prime Time: Scroll FYP sebelum tidur" },
+        ],
+        facebook: [
+          { start: "12:00", end: "13:15", label: "Istirahat siang" },
+          { start: "17:30", end: "18:45", label: "Sore pulang kerja" },
+          { start: "20:00", end: "22:15", label: "🔥 Prime Time malam" },
+        ],
+        whatsapp: [
+          { start: "07:30", end: "08:30", label: "Pagi berangkat aktivitas" },
+          { start: "12:00", end: "13:00", label: "Jam makan siang" },
+          { start: "20:15", end: "21:45", label: "🔥 Prime Time Status WA" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "07:30", end: "08:45", label: "Jumat pagi" },
+          { start: "11:45", end: "13:30", label: "Istirahat siang Jumat" },
+          { start: "21:00", end: "23:30", label: "🔥 Prime Time Begadang Jumat Malam" },
+        ],
+        tiktok: [
+          { start: "11:45", end: "13:30", label: "Siang Jumat" },
+          { start: "17:00", end: "18:30", label: "Pulang kerja TGIF" },
+          { start: "20:30", end: "23:15", label: "🔥 Prime Time Jumat Malam" },
+        ],
+        facebook: [
+          { start: "12:00", end: "13:30", label: "Siang Jumat" },
+          { start: "17:30", end: "19:00", label: "Sore Jumat" },
+          { start: "20:30", end: "22:30", label: "🔥 Jumat malam" },
+        ],
+        whatsapp: [
+          { start: "12:00", end: "13:15", label: "Siang Jumat" },
+          { start: "17:30", end: "18:30", label: "Sore pulang kerja" },
+          { start: "20:30", end: "22:00", label: "🔥 Prime Time WA" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "09:30", end: "11:00", label: "Bangun siang akhir pekan" },
+          { start: "15:00", end: "16:30", label: "Sore di kos" },
+          { start: "21:00", end: "23:30", label: "🔥 Malam minggu" },
+        ],
+        tiktok: [
+          { start: "09:30", end: "11:30", label: "Sabtu pagi menjelang siang" },
+          { start: "15:00", end: "16:30", label: "Sabtu sore" },
+          { start: "20:30", end: "23:15", label: "🔥 Prime Time Malam Minggu" },
+        ],
+        facebook: [
+          { start: "09:30", end: "11:00", label: "Sabtu pagi" },
+          { start: "15:00", end: "16:30", label: "Sabtu sore" },
+          { start: "20:00", end: "22:30", label: "🔥 Malam minggu" },
+        ],
+        whatsapp: [
+          { start: "09:30", end: "11:00", label: "Sabtu pagi" },
+          { start: "16:00", end: "17:30", label: "Sabtu sore" },
+          { start: "20:00", end: "22:00", label: "🔥 Prime Time WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "10:00", end: "11:30", label: "Minggu pagi beres kamar kos" },
+          { start: "14:00", end: "16:00", label: "Minggu siang" },
+          { start: "20:00", end: "22:30", label: "🔥 Puncak Checkout sebelum Senin" },
+        ],
+        tiktok: [
+          { start: "10:00", end: "12:00", label: "Minggu siang" },
+          { start: "14:30", end: "16:30", label: "Minggu sore" },
+          { start: "19:30", end: "22:15", label: "🔥 Prime Time Minggu Malam" },
+        ],
+        facebook: [
+          { start: "10:00", end: "11:30", label: "Minggu pagi" },
+          { start: "14:00", end: "16:00", label: "Minggu siang" },
+          { start: "19:30", end: "22:00", label: "🔥 Minggu malam" },
+        ],
+        whatsapp: [
+          { start: "09:30", end: "11:00", label: "Minggu pagi" },
+          { start: "15:00", end: "16:30", label: "Minggu sore" },
+          { start: "19:30", end: "21:30", label: "🔥 Prime Time WA" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Threads & X adalah sarang utama pekerja & anak kos. Gunakan gaya curhat relatable soal capek kerja atau sempitnya kamar kos.",
+      tiktok: "Tunjukkan betapa ringkas, hemat tempat, dan hemat listriknya barang tersebut untuk ukuran kamar kos.",
+      facebook: "Cocok dibagikan dengan sudut pandang penghematan pengeluaran bulanan.",
+      whatsapp: "Sangat pas untuk status malam hari saat teman-teman kos/kantor sedang rebahan.",
+    },
+  },
+
+  kuliner_fnb: {
+    label: "🍜 Kuliner, Cemilan Viral, Kopi & Bahan Makanan",
+    keywords: ["makanan", "cemilan", "snack", "pedas", "basreng", "keripik", "kopi", "minuman", "coklat", "kue", "roti", "sambal", "bumbu", "frozen", "kuliner", "lapar", "ngemil", "teh", "matcha"],
+    audienceHabit: "Dipicu oleh jam biologis lapar & ngantuk: menjelang makan siang (11:00), jam ngantuk kantor sore (15:00–16:30), dan lapar tengah malam (20:30–22:30).",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "11:00", end: "12:30", label: "🔥 Jam perut mulai keroncongan siang" },
+          { start: "15:15", end: "16:45", label: "🔥 Jam ngantuk sore (Cari teman ngemil/kopi)" },
+          { start: "20:30", end: "22:30", label: "🔥 Jam rawan lapar tengah malam" },
+        ],
+        tiktok: [
+          { start: "10:45", end: "12:15", label: "Menjelang makan siang" },
+          { start: "15:00", end: "16:30", label: "Jam ngemil sore" },
+          { start: "20:00", end: "22:30", label: "🔥 Prime Time: Racun kuliner malam" },
+        ],
+        facebook: [
+          { start: "10:30", end: "12:00", label: "Ibu-ibu cari ide lauk/cemilan siang" },
+          { start: "15:00", end: "16:30", label: "Sore santai" },
+          { start: "19:30", end: "21:30", label: "🔥 Malam santai" },
+        ],
+        whatsapp: [
+          { start: "11:00", end: "12:15", label: "Menjelang makan siang" },
+          { start: "15:15", end: "16:30", label: "Jam ngemil sore" },
+          { start: "20:00", end: "21:30", label: "🔥 Prime Time Status WA" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "10:45", end: "11:45", label: "Sebelum istirahat Jumat" },
+          { start: "15:00", end: "16:45", label: "Sore Jumat cari stok cemilan weekend" },
+          { start: "20:30", end: "23:00", label: "🔥 Lapar malam TGIF" },
+        ],
+        tiktok: [
+          { start: "11:00", end: "13:00", label: "Siang Jumat" },
+          { start: "15:00", end: "16:45", label: "Sore Jumat" },
+          { start: "20:00", end: "22:45", label: "🔥 Prime Time Jumat Malam" },
+        ],
+        facebook: [
+          { start: "10:30", end: "11:45", label: "Pagi menjelang siang" },
+          { start: "15:00", end: "16:30", label: "Sore Jumat" },
+          { start: "19:45", end: "21:45", label: "🔥 Malam akhir pekan" },
+        ],
+        whatsapp: [
+          { start: "11:00", end: "12:00", label: "Siang Jumat" },
+          { start: "15:30", end: "16:45", label: "Sore Jumat" },
+          { start: "20:00", end: "21:30", label: "🔥 Prime Time WA" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "10:30", end: "12:00", label: "Sabtu siang" },
+          { start: "15:30", end: "17:00", label: "Sore akhir pekan" },
+          { start: "20:30", end: "23:00", label: "🔥 Malam minggu cari cemilan nonton" },
+        ],
+        tiktok: [
+          { start: "10:30", end: "12:30", label: "Sabtu siang" },
+          { start: "15:00", end: "17:00", label: "Sore akhir pekan" },
+          { start: "20:00", end: "22:45", label: "🔥 Prime Time Malam Minggu" },
+        ],
+        facebook: [
+          { start: "10:00", end: "11:30", label: "Sabtu pagi-siang" },
+          { start: "15:00", end: "16:30", label: "Sabtu sore" },
+          { start: "19:30", end: "21:30", label: "🔥 Malam minggu" },
+        ],
+        whatsapp: [
+          { start: "10:30", end: "12:00", label: "Sabtu siang" },
+          { start: "15:30", end: "17:00", label: "Sabtu sore" },
+          { start: "20:00", end: "21:30", label: "🔥 Prime Time WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "10:30", end: "12:30", label: "Minggu siang di rumah" },
+          { start: "15:00", end: "16:45", label: "Minggu sore" },
+          { start: "19:45", end: "22:00", label: "🔥 Stok cemilan/kopi buat kerja besok Senin" },
+        ],
+        tiktok: [
+          { start: "10:30", end: "12:30", label: "Minggu siang" },
+          { start: "15:00", end: "16:45", label: "Minggu sore" },
+          { start: "19:30", end: "22:00", label: "🔥 Prime Time Minggu Malam" },
+        ],
+        facebook: [
+          { start: "10:00", end: "12:00", label: "Minggu siang" },
+          { start: "15:00", end: "16:30", label: "Minggu sore" },
+          { start: "19:30", end: "21:30", label: "🔥 Minggu malam" },
+        ],
+        whatsapp: [
+          { start: "10:30", end: "12:00", label: "Minggu siang" },
+          { start: "15:30", end: "16:45", label: "Minggu sore" },
+          { start: "19:30", end: "21:15", label: "🔥 Prime Time WA" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Deskripsikan tekstur, wangi, dan rasa secara jujur (misal: pedas daun jeruknya gak pahit, bumbunya medok).",
+      tiktok: "Gunakan suara ASMR kunyahan/tuangan bumbu di 3 detik pertama saat jam rawan lapar.",
+      facebook: "Tunjukkan porsi kemasan yang besar/worth-it untuk dimakan rame-rame bareng keluarga.",
+      whatsapp: "Posting foto close-up makanan di Status WA tepat jam 11:30 siang atau 20:30 malam bikin kontak langsung nanya beli di mana.",
+    },
+  },
+
+  kesehatan_olahraga: {
+    label: "🏃 Kesehatan, Suplemen, Olahraga & Personal Care",
+    keywords: ["sehat", "vitamin", "suplemen", "olahraga", "gym", "lari", "sepatu lari", "diet", "langsing", "pegal", "nyeri", "pijat", "koyo", "minyak", "tidur", "insomnia", "madu", "herbal", "gigi", "mulut"],
+    audienceHabit: "Aktif pagi saat motivasi sehat tinggi (06:00–07:30) dan malam saat badan terasa pegal/lelah setelah beraktivitas (19:30–21:30).",
+    schedules: {
+      weekday: {
+        threads: [
+          { start: "06:00", end: "07:30", label: "🔥 Pagi hari (Mood hidup sehat & olahraga)" },
+          { start: "12:00", end: "13:15", label: "Istirahat siang" },
+          { start: "19:45", end: "21:45", label: "🔥 Prime Time: Badan mulai pegal/lelah kerja" },
+        ],
+        tiktok: [
+          { start: "06:00", end: "07:30", label: "Pagi hari" },
+          { start: "12:00", end: "13:00", label: "Siang hari" },
+          { start: "19:30", end: "21:30", label: "🔥 Prime Time: Cari solusi keluhan badan" },
+        ],
+        facebook: [
+          { start: "06:30", end: "08:00", label: "Pagi hari" },
+          { start: "12:30", end: "14:00", label: "Siang hari" },
+          { start: "19:30", end: "21:15", label: "🔥 Malam santai" },
+        ],
+        whatsapp: [
+          { start: "06:30", end: "07:45", label: "Status pagi olahraga/sehat" },
+          { start: "12:15", end: "13:15", label: "Siang" },
+          { start: "19:30", end: "21:00", label: "🔥 Prime Time WA" },
+        ],
+      },
+      friday: {
+        threads: [
+          { start: "06:00", end: "07:30", label: "Jumat pagi olahraga" },
+          { start: "13:00", end: "14:15", label: "Siang Jumat" },
+          { start: "20:00", end: "22:00", label: "🔥 Badan remuk setelah seminggu kerja" },
+        ],
+        tiktok: [
+          { start: "06:00", end: "07:30", label: "Jumat pagi" },
+          { start: "13:00", end: "14:15", label: "Siang Jumat" },
+          { start: "19:30", end: "22:00", label: "🔥 Prime Time Jumat Malam" },
+        ],
+        facebook: [
+          { start: "06:30", end: "08:00", label: "Jumat pagi" },
+          { start: "13:00", end: "14:30", label: "Siang Jumat" },
+          { start: "19:30", end: "21:30", label: "🔥 Jumat malam" },
+        ],
+        whatsapp: [
+          { start: "06:30", end: "08:00", label: "Jumat pagi" },
+          { start: "13:00", end: "14:00", label: "Siang Jumat" },
+          { start: "19:30", end: "21:15", label: "🔥 Prime Time WA" },
+        ],
+      },
+      saturday: {
+        threads: [
+          { start: "06:00", end: "08:30", label: "🔥 Sabtu pagi (Waktu lari pagi / olahraga)" },
+          { start: "13:30", end: "15:00", label: "Siang istirahat" },
+          { start: "20:00", end: "22:00", label: "Malam minggu" },
+        ],
+        tiktok: [
+          { start: "06:00", end: "08:30", label: "🔥 Pagi olahraga akhir pekan" },
+          { start: "13:00", end: "14:30", label: "Siang" },
+          { start: "19:30", end: "21:45", label: "Prime Time Malam" },
+        ],
+        facebook: [
+          { start: "06:30", end: "08:30", label: "Sabtu pagi sehat" },
+          { start: "13:30", end: "15:00", label: "Siang" },
+          { start: "19:30", end: "21:30", label: "🔥 Sabtu malam" },
+        ],
+        whatsapp: [
+          { start: "06:30", end: "08:30", label: "Status pagi olahraga" },
+          { start: "13:00", end: "14:30", label: "Siang" },
+          { start: "19:30", end: "21:15", label: "🔥 Prime Time WA" },
+        ],
+      },
+      sunday: {
+        threads: [
+          { start: "06:00", end: "08:30", label: "🔥 Minggu pagi CFD / olahraga" },
+          { start: "13:30", end: "15:00", label: "Minggu siang" },
+          { start: "19:30", end: "21:30", label: "🔥 Persiapan stamina masuk hari Senin" },
+        ],
+        tiktok: [
+          { start: "06:00", end: "08:30", label: "Minggu pagi CFD" },
+          { start: "13:00", end: "15:00", label: "Minggu siang" },
+          { start: "19:15", end: "21:30", label: "🔥 Prime Time Minggu Malam" },
+        ],
+        facebook: [
+          { start: "06:30", end: "08:30", label: "Minggu pagi" },
+          { start: "13:30", end: "15:00", label: "Minggu siang" },
+          { start: "19:30", end: "21:15", label: "🔥 Minggu malam" },
+        ],
+        whatsapp: [
+          { start: "06:30", end: "08:30", label: "Minggu pagi" },
+          { start: "13:30", end: "15:00", label: "Minggu siang" },
+          { start: "19:30", end: "21:00", label: "🔥 Prime Time WA" },
+        ],
+      },
+    },
+    platformTips: {
+      threads: "Mulai dari keluhan badan yang sering disepelekan (misal: gampang masuk angin, pinggang pegal duduk lama, susah tidur).",
+      tiktok: "Hindari klaim medis berlebihan agar tidak terkena pelanggaran TikTok; fokus pada rasa nyaman/segar setelah pemakaian.",
+      facebook: "Edukasi ringan tentang kebiasaan sehat sangat sering di-share ulang oleh warga Facebook.",
+      whatsapp: "Ceritakan perubahan yang dirasakan badan sendiri atau keluarga di rumah.",
+    },
+  },
+};
+
+const PLATFORM_META = {
+  threads: { icon: "🧵", name: "Threads & X" },
+  tiktok: { icon: "🎵", name: "TikTok Video" },
+  facebook: { icon: "📘", name: "Facebook" },
+  whatsapp: { icon: "💬", name: "WhatsApp" },
+};
+
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   loadApiConfig();
+  initScheduleSelectors();
   renderHistory();
   setupEventListeners();
 });
@@ -346,8 +1089,10 @@ Kembalikan HANYA format JSON valid dengan struktur persis berikut:
 {
   "productName": "Nama produk yang jelas dan ringkas",
   "niche": "Kategori / Niche spesifik (contoh: Home Living & Kebersihan Rumah / Ibu Rumah Tangga)",
+  "nicheCategory": "Pilih SATU kode kategori paling relevan dari daftar ini: home_living | beauty_fashion | parenting_kids | gadget_otomotif | anak_kos_pekerja | kuliner_fnb | kesehatan_olahraga",
   "targetAudience": "Siapa pembeli paling potensial produk ini (contoh: Ibu rumah tangga, anak kos, pekerja sibuk)",
   "buyerTrigger": "Alasan emosional terkuat kenapa orang akhirnya checkout produk ini",
+  "bestTimeInsight": "1 kalimat tajam tentang momen harian kapan pembeli produk ini paling sering merasakan masalah tersebut dan rawan checkout",
   "problems": [
     {
       "id": 1,
@@ -395,6 +1140,22 @@ function renderAnalysisResult(data) {
     </div>
   `;
 
+  // Pilih otomatis kategori niche dan hari ini untuk Bank Data Jam Upload
+  const detectedCategory =
+    data.nicheCategory && AFFILIATE_POSTING_SCHEDULE_DB[data.nicheCategory]
+      ? data.nicheCategory
+      : detectNicheCategoryFromText(
+          `${data.productName || ""} ${data.niche || ""} ${data.targetAudience || ""} ${currentState.productInfo || ""}`
+        );
+
+  if (scheduleNicheSelect) {
+    scheduleNicheSelect.value = detectedCategory;
+  }
+  if (scheduleDaySelect) {
+    scheduleDaySelect.value = String(new Date().getDay());
+  }
+  renderScheduleRecommendation();
+
   problemsList.innerHTML = "";
   (data.problems || []).forEach((prob, idx) => {
     const card = document.createElement("div");
@@ -425,6 +1186,257 @@ function renderAnalysisResult(data) {
       const index = parseInt(btn.getAttribute("data-index"), 10);
       handleGenerateContentForProblem(index, btn);
     });
+  });
+}
+
+// ============================================================================
+// FUNGSI BANK DATA JAM UPLOAD TERBAIK (PER NICHE, HARI INI & PLATFORM)
+// ============================================================================
+function initScheduleSelectors() {
+  if (!scheduleDaySelect || !scheduleNicheSelect) return;
+
+  const todayIdx = new Date().getDay();
+  scheduleDaySelect.innerHTML = "";
+  // Urutkan mulai dari Senin (1..6) lalu Minggu (0)
+  const orderedDays = [1, 2, 3, 4, 5, 6, 0];
+  orderedDays.forEach((dayIdx) => {
+    const dayObj = INDONESIAN_DAYS.find((d) => d.index === dayIdx);
+    const opt = document.createElement("option");
+    opt.value = String(dayIdx);
+    opt.textContent = dayIdx === todayIdx ? `📍 Hari Ini (${dayObj.name})` : `Hari ${dayObj.name}`;
+    if (dayIdx === todayIdx) opt.selected = true;
+    scheduleDaySelect.appendChild(opt);
+  });
+
+  scheduleNicheSelect.innerHTML = "";
+  Object.entries(AFFILIATE_POSTING_SCHEDULE_DB).forEach(([key, nicheObj]) => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = nicheObj.label;
+    scheduleNicheSelect.appendChild(opt);
+  });
+
+  scheduleDaySelect.addEventListener("change", () => {
+    renderScheduleRecommendation();
+    refreshActiveTabTimeBanners();
+  });
+
+  scheduleNicheSelect.addEventListener("change", () => {
+    renderScheduleRecommendation();
+    refreshActiveTabTimeBanners();
+  });
+}
+
+function detectNicheCategoryFromText(text = "") {
+  const lower = text.toLowerCase();
+  let bestKey = "home_living";
+  let bestScore = 0;
+
+  for (const [key, nicheObj] of Object.entries(AFFILIATE_POSTING_SCHEDULE_DB)) {
+    let score = 0;
+    for (const kw of nicheObj.keywords) {
+      if (lower.includes(kw)) score += 1;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestKey = key;
+    }
+  }
+  return bestKey;
+}
+
+function parseTimeToMinutes(hhmm = "00:00") {
+  const [h, m] = hhmm.split(":").map((n) => parseInt(n, 10) || 0);
+  return h * 60 + m;
+}
+
+function formatDurationMinutes(diffMin) {
+  if (diffMin <= 0) return "sekarang";
+  const h = Math.floor(diffMin / 60);
+  const m = diffMin % 60;
+  if (h > 0 && m > 0) return `${h} jam ${m} menit lagi`;
+  if (h > 0) return `${h} jam lagi`;
+  return `${m} menit lagi`;
+}
+
+function renderScheduleRecommendation() {
+  if (!scheduleGrid || !scheduleDaySelect || !scheduleNicheSelect) return;
+
+  const selectedDayIdx = parseInt(scheduleDaySelect.value, 10);
+  const selectedNicheKey = scheduleNicheSelect.value || "home_living";
+
+  const dayMeta = INDONESIAN_DAYS.find((d) => d.index === selectedDayIdx) || INDONESIAN_DAYS[1];
+  const nicheData =
+    AFFILIATE_POSTING_SCHEDULE_DB[selectedNicheKey] || AFFILIATE_POSTING_SCHEDULE_DB.home_living;
+  const daySchedule = nicheData.schedules[dayMeta.group] || nicheData.schedules.weekday;
+
+  const now = new Date();
+  const isTodaySelected = selectedDayIdx === now.getDay();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const nowClockStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+  // Cari apakah saat ini sedang Live Prime Time atau slot terdekat berikutnya
+  let activeLivePlatforms = [];
+  let nearestUpcoming = null; // { platformName, slot, diffMin }
+
+  Object.entries(PLATFORM_META).forEach(([platKey, platMeta]) => {
+    const slots = daySchedule[platKey] || [];
+    slots.forEach((slot) => {
+      const startMin = parseTimeToMinutes(slot.start);
+      const endMin = parseTimeToMinutes(slot.end);
+      if (isTodaySelected) {
+        if (nowMinutes >= startMin && nowMinutes <= endMin) {
+          activeLivePlatforms.push(`${platMeta.icon} ${platMeta.name} (${slot.start}–${slot.end})`);
+        } else if (startMin > nowMinutes) {
+          const diff = startMin - nowMinutes;
+          if (!nearestUpcoming || diff < nearestUpcoming.diffMin) {
+            nearestUpcoming = {
+              platformName: `${platMeta.icon} ${platMeta.name}`,
+              slot,
+              diffMin: diff,
+            };
+          }
+        }
+      }
+    });
+  });
+
+  if (isTodaySelected) {
+    if (activeLivePlatforms.length > 0) {
+      scheduleRealtimeBanner.className = "schedule-realtime-banner";
+      scheduleRealtimeBanner.innerHTML = `
+        <div>
+          🟢 <strong>WAKTU EMAS SEKARANG (${nowClockStr} WIB):</strong> Saat ini sedang masuk jam aktif upload untuk
+          <strong>${activeLivePlatforms.join(", ")}</strong>!
+        </div>
+        <span>🔥 Siap Posting Sekarang</span>
+      `;
+    } else if (nearestUpcoming) {
+      scheduleRealtimeBanner.className = "schedule-realtime-banner status-upcoming";
+      scheduleRealtimeBanner.innerHTML = `
+        <div>
+          ⏳ <strong>Status Jam Sekarang (${nowClockStr} WIB):</strong> Jam emas terdekat berikutnya hari ini adalah
+          <strong>${nearestUpcoming.platformName} pukul ${nearestUpcoming.slot.start}–${nearestUpcoming.slot.end} WIB</strong>
+          (${formatDurationMinutes(nearestUpcoming.diffMin)}).
+        </div>
+        <span>⚡ Siapkan Draf Konten</span>
+      `;
+    } else {
+      scheduleRealtimeBanner.className = "schedule-realtime-banner status-upcoming";
+      scheduleRealtimeBanner.innerHTML = `
+        <div>
+          🌙 <strong>Status Jam Sekarang (${nowClockStr} WIB):</strong> Jam prime time hari ini hampir selesai. Anda tetap bisa posting untuk audiens begadang atau jadwalkan untuk <strong>jam pagi besok</strong>!
+        </div>
+      `;
+    }
+  } else {
+    scheduleRealtimeBanner.className = "schedule-realtime-banner status-upcoming";
+    scheduleRealtimeBanner.innerHTML = `
+      <div>
+        📅 <strong>Mode Perencanaan Jadwal (Hari ${dayMeta.name}):</strong> Menampilkan rekomendasi jam upload terbaik untuk hari <strong>${dayMeta.name}</strong>.
+      </div>
+    `;
+  }
+
+  const aiInsight = currentState.analysis?.bestTimeInsight
+    ? `<br/><strong>💡 Insight Produk Ini:</strong> ${escapeHtml(currentState.analysis.bestTimeInsight)}`
+    : "";
+
+  scheduleDayBehavior.innerHTML = `
+    <strong>📊 Pola Audiens Hari ${dayMeta.name}:</strong> ${escapeHtml(dayMeta.mood)}<br/>
+    <strong>🎯 Kebiasaan Niche:</strong> ${escapeHtml(nicheData.audienceHabit)}
+    ${aiInsight}
+  `;
+
+  scheduleGrid.innerHTML = "";
+  Object.entries(PLATFORM_META).forEach(([platKey, platMeta]) => {
+    const slots = daySchedule[platKey] || [];
+    const tip = nicheData.platformTips?.[platKey] || "";
+
+    // Cek apakah platform ini sedang live sekarang
+    let isPlatformLive = false;
+    let nextSlotIdx = -1;
+    if (isTodaySelected) {
+      slots.forEach((slot, idx) => {
+        const sMin = parseTimeToMinutes(slot.start);
+        const eMin = parseTimeToMinutes(slot.end);
+        if (nowMinutes >= sMin && nowMinutes <= eMin) {
+          isPlatformLive = true;
+        } else if (sMin > nowMinutes && nextSlotIdx === -1) {
+          nextSlotIdx = idx;
+        }
+      });
+    }
+
+    const slotsHtml = slots
+      .map((slot, idx) => {
+        const sMin = parseTimeToMinutes(slot.start);
+        const eMin = parseTimeToMinutes(slot.end);
+        const isLive = isTodaySelected && nowMinutes >= sMin && nowMinutes <= eMin;
+        const isNext = isTodaySelected && !isLive && idx === nextSlotIdx;
+        const rowClass = isLive ? "active-slot" : isNext ? "next-slot" : "";
+        const badgePrefix = isLive ? "🟢 " : isNext ? "⏳ " : "🕒 ";
+
+        return `
+          <div class="time-slot-item ${rowClass}">
+            <span class="time-slot-clock">${badgePrefix}${escapeHtml(slot.start)} – ${escapeHtml(slot.end)} WIB</span>
+            <span class="time-slot-label">${escapeHtml(slot.label)}</span>
+          </div>
+        `;
+      })
+      .join("");
+
+    const card = document.createElement("div");
+    card.className = "schedule-card";
+    card.innerHTML = `
+      <div>
+        <div class="schedule-card-head">
+          <span class="schedule-platform-name">${platMeta.icon} ${platMeta.name}</span>
+          <span class="schedule-prime-tag ${isPlatformLive ? "live-now" : ""}">
+            ${isPlatformLive ? "🟢 LIVE SEKARANG" : `Hari ${dayMeta.name}`}
+          </span>
+        </div>
+        <div class="time-slots-list" style="margin-top: 8px;">
+          ${slotsHtml}
+        </div>
+      </div>
+      <div class="schedule-card-tip">
+        <strong>Tips Algoritma:</strong> ${escapeHtml(tip)}
+      </div>
+    `;
+    scheduleGrid.appendChild(card);
+  });
+}
+
+function createPlatformTimeBanner(platformKey) {
+  const selectedDayIdx = scheduleDaySelect ? parseInt(scheduleDaySelect.value, 10) : new Date().getDay();
+  const selectedNicheKey = scheduleNicheSelect ? scheduleNicheSelect.value : "home_living";
+  const dayMeta = INDONESIAN_DAYS.find((d) => d.index === selectedDayIdx) || INDONESIAN_DAYS[1];
+  const nicheData =
+    AFFILIATE_POSTING_SCHEDULE_DB[selectedNicheKey] || AFFILIATE_POSTING_SCHEDULE_DB.home_living;
+  const daySchedule = nicheData.schedules[dayMeta.group] || nicheData.schedules.weekday;
+  const slots = daySchedule[platformKey] || [];
+  const platMeta = PLATFORM_META[platformKey] || { icon: "⏰", name: platformKey };
+  const tip = nicheData.platformTips?.[platformKey] || "";
+
+  const slotStrings = slots.map((s) => `<strong>${escapeHtml(s.start)}–${escapeHtml(s.end)} WIB</strong> (${escapeHtml(s.label)})`).join(" &bull; ");
+
+  return `
+    <div class="platform-time-banner" data-platform-banner="${platformKey}">
+      <div>
+        <div>⏰ <strong>Jam Upload Terbaik ${platMeta.icon} ${platMeta.name} (Hari ${dayMeta.name}):</strong> ${slotStrings}</div>
+        <div style="font-size: 0.79rem; margin-top: 3px; opacity: 0.9;">💡 <em>${escapeHtml(tip)}</em></div>
+      </div>
+    </div>
+  `;
+}
+
+function refreshActiveTabTimeBanners() {
+  ["threads", "tiktok", "facebook", "whatsapp"].forEach((platKey) => {
+    const existing = document.querySelector(`[data-platform-banner="${platKey}"]`);
+    if (existing) {
+      existing.outerHTML = createPlatformTimeBanner(platKey);
+    }
   });
 }
 
@@ -541,7 +1553,8 @@ function renderGeneratedContent(problem, content) {
   const threadsAffiliate = content.threads?.affiliateReply || content.threads?.firstReply || "";
   const mainThreadText = content.threads?.mainPost || "";
 
-  let threadsHtml = createCopyBlock(
+  let threadsHtml = createPlatformTimeBanner("threads");
+  threadsHtml += createCopyBlock(
     `🧵 Post Utama Threads & X (${mainThreadText.length}/280 kar — Tanpa Link)`,
     mainThreadText
   );
@@ -560,6 +1573,7 @@ function renderGeneratedContent(problem, content) {
 
   // 2. TikTok
   document.getElementById("tab-tiktok").innerHTML = `
+    ${createPlatformTimeBanner("tiktok")}
     ${createCopyBlock("🎥 Ide Visual Video", content.tiktok?.visualIdea)}
     ${createCopyBlock("⚡ Hook 3 Detik Pertama (Teks Layar / Ucapan)", content.tiktok?.hook3Sec)}
     ${createCopyBlock("🎙️ Script Voiceover Lengkap (Storytelling PAS)", content.tiktok?.voiceoverScript)}
@@ -572,7 +1586,8 @@ function renderGeneratedContent(problem, content) {
     : [];
   const fbAffiliate = content.facebook?.affiliateComment || content.facebook?.firstComment || "";
 
-  let fbHtml = createCopyBlock(
+  let fbHtml = createPlatformTimeBanner("facebook");
+  fbHtml += createCopyBlock(
     "📘 Postingan Utama Facebook (Storytelling Pemicu Interaksi — Tanpa Link)",
     content.facebook?.mainPost
   );
@@ -590,6 +1605,7 @@ function renderGeneratedContent(problem, content) {
 
   // 4. WhatsApp
   document.getElementById("tab-whatsapp").innerHTML = `
+    ${createPlatformTimeBanner("whatsapp")}
     ${createCopyBlock("📱 Caption Status WhatsApp", content.whatsapp?.statusText)}
     ${createCopyBlock("📢 Pesan Grup / Saluran / Broadcast WhatsApp", content.whatsapp?.broadcastText)}
   `;

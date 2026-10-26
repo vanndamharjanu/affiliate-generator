@@ -121,6 +121,35 @@
         <!-- Diisi oleh JS -->
       </div>
 
+      <!-- FITUR BARU: REKOMENDASI JAM UPLOAD TERBAIK BERDASARKAN NICHE & HARI INI -->
+      <div id="scheduleBox" class="schedule-box">
+        <div class="schedule-header">
+          <div>
+            <span class="schedule-badge">⏰ Bank Data Jam Upload Affiliate</span>
+            <h3>Rekomendasi Jam Posting Terbaik per Platform</h3>
+          </div>
+          <div class="schedule-controls">
+            <div class="schedule-select-group">
+              <label for="scheduleDaySelect">Hari Target:</label>
+              <select id="scheduleDaySelect" title="Pilih Hari Upload"></select>
+            </div>
+            <div class="schedule-select-group">
+              <label for="scheduleNicheSelect">Kategori Niche:</label>
+              <select id="scheduleNicheSelect" title="Pilih Kategori Niche"></select>
+            </div>
+          </div>
+        </div>
+        <div id="scheduleRealtimeBanner" class="schedule-realtime-banner">
+          <!-- Status jam sekarang vs jam emas terdekat -->
+        </div>
+        <div id="scheduleDayBehavior" class="schedule-day-behavior">
+          <!-- Penjelasan pola perilaku audiens di hari & niche terpilih -->
+        </div>
+        <div id="scheduleGrid" class="schedule-grid">
+          <!-- Kartu jam upload Threads/X, TikTok, Facebook, WhatsApp -->
+        </div>
+      </div>
+
       <div class="form-row tone-selector-box">
         <div style="flex: 1 1 220px;">
           <label for="contentTone">Pilih Gaya Bahasa Konten:</label>
