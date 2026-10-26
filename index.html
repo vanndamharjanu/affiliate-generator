@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Affiliate Problem-to-Content Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-badge">PAS AI</span>
+        <div>
+          <h1>Shopee Affiliate Content Generator</h1>
+          <p>Analisis masalah pembeli &rarr; Buat konten Threads, TikTok, WA &amp; FB</p>
+        </div>
+      </div>
+      <button id="toggleApiModalBtn" class="btn btn-outline btn-sm" type="button">
+        <span id="apiStatusDot" class="status-dot"></span>
+        Pengaturan API Key
+      </button>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <!-- Modal / Panel API Key -->
+    <section id="apiPanel" class="card api-card hidden">
+      <div class="card-header-row">
+        <h2>🔑 Konfigurasi Google AI Studio (Gemini API)</h2>
+        <button id="closeApiPanelBtn" class="btn-icon" type="button" title="Tutup">&times;</button>
+      </div>
+      <p class="helper-text">
+        API Key disimpan <strong>hanya di browser perangkat Anda (LocalStorage)</strong>. Aman untuk di-hosting di GitHub Pages tanpa takut API Key bocor ke publik.
+      </p>
+      <div class="form-row">
+        <input
+          type="password"
+          id="apiKeyInput"
+          placeholder="Tempel Gemini API Key dari Google AI Studio (AIzaSy...)"
+          autocomplete="off"
+        />
+        <select id="modelSelect" title="Pilih Model Gemini">
+          <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Cepat &amp; Kuota Gratis Besar)</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro (Penalaran Lebih Dalam)</option>
+          <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Hemat Kuota)</option>
+        </select>
+        <button id="saveApiKeyBtn" class="btn btn-primary" type="button">Simpan Key</button>
+      </div>
+      <p class="helper-text small">
+        Belum punya key? Ambil gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+      </p>
+    </section>
+
+    <!-- STEP 1: INPUT PRODUK & LINK AFFILIATE -->
+    <section class="card">
+      <div class="step-badge">Langkah 1</div>
+      <h2>Masukkan Link Affiliate &amp; Info Produk</h2>
+      <p class="helper-text">
+        Tempel link Shopee Anda. Jika menggunakan link pendek (<code>s.shopee.co.id</code>), sistem akan mencoba mendeteksi otomatis, atau Anda bisa mengetik nama produk / tempel screenshot halaman produk (<code>Ctrl+V</code>).
+      </p>
+
+      <form id="analyzeForm">
+        <div class="form-group">
+          <label for="affiliateUrl">Link Affiliate Shopee <span class="required">*</span></label>
+          <div class="input-with-action">
+            <input
+              type="url"
+              id="affiliateUrl"
+              placeholder="Contoh: https://s.shopee.co.id/xxxx atau link produk Shopee"
+              required
+            />
+            <button type="button" id="detectUrlBtn" class="btn btn-secondary btn-sm">
+              Deteksi Link
+            </button>
+          </div>
+          <span id="urlDetectStatus" class="status-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="productInfo">Nama Produk / Deskripsi Singkat / Ulasan Pembeli <span class="required">*</span></label>
+          <textarea
+            id="productInfo"
+            rows="3"
+            placeholder="Contoh: Pembersih kerak kamar mandi ampuh tanpa sikat, cairan penghilang noda kuning di keramik & kloset..."
+            required
+          ></textarea>
+          <span class="helper-text small">
+            Tips: Semakin jelas nama/fungsi produknya, semakin tajam analisis masalah pembelinya.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Screenshot Produk / Ulasan Shopee (Opsional - Bisa Tekan <code>Ctrl+V</code> di mana saja)</label>
+          <div id="dropZone" class="drop-zone">
+            <input type="file" id="imageInput" accept="image/*" class="hidden-file" />
+            <div id="dropZonePrompt">
+              📷 Klik untuk pilih gambar atau langsung <strong>Paste (Ctrl+V)</strong> screenshot produk/ulasan di sini
+            </div>
+            <div id="imagePreviewWrapper" class="image-preview-wrapper hidden">
+              <img id="imagePreview" alt="Preview Screenshot Produk" />
+              <button type="button" id="removeImageBtn" class="btn btn-danger btn-xs">Hapus Gambar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="analyzeBtn" class="btn btn-primary btn-full">
+            🔍 1. Analisis Masalah Pembeli &amp; Niche
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- STEP 2: HASIL ANALISIS MASALAH & NICHE -->
+    <section id="analysisSection" class="card hidden">
+      <div class="step-badge">Langkah 2</div>
+      <h2>Hasil Analisis Niche &amp; Masalah Pembeli</h2>
+      
+      <div id="nicheOverview" class="niche-box">
+        <!-- Diisi oleh JS -->
+      </div>
+
+      <div class="form-row tone-selector-box">
+        <div style="flex: 1 1 220px;">
+          <label for="contentTone">Pilih Gaya Bahasa Konten:</label>
+          <select id="contentTone">
+            <option value="Relatable & Curhat Santai (Soft Selling)">Relatable &amp; Curhat Santai (Soft Selling - Cocok untuk Threads/FB)</option>
+            <option value="Storytelling Emosional (Menyentuh Masalah Sehari-hari)">Storytelling Emosional (Menyentuh Masalah Sehari-hari)</option>
+            <option value="Edukasi & Tips Solutif (Berbagi Ilmu Dulu Baru Spill Produk)">Edukasi &amp; Tips Solutif (Berbagi Ilmu Dulu Baru Spill Produk)</option>
+            <option value="Review Jujur Pengalaman Pribadi">Review Jujur Pengalaman Pribadi</option>
+          </select>
+        </div>
+        <div style="flex: 1 1 200px;">
+          <label for="pronounStyle">Kata Ganti / Sapaan:</label>
+          <select id="pronounStyle">
+            <option value="Aku - Kalian (Santai & Akrab)" selected>Aku &ndash; Kalian (Santai &amp; Akrab)</option>
+            <option value="Aku - Moms / Bunda (Parenting, Dapur & Rumah Tangga)">Aku &ndash; Moms / Bunda (Rumah Tangga &amp; Anak)</option>
+            <option value="Saya - Bapak-bapak / Pak / Om (Akrab khas Bapak-bapak: Otomotif, Pertukangan, Kopi, Elektronik)">Saya &ndash; Bapak-bapak / Om (Niche Bapak-bapak)</option>
+            <option value="Aku - Pakde / Bude (Akrab Kekeluargaan & Warga)">Aku &ndash; Pakde / Bude (Akrab Kekeluargaan)</option>
+            <option value="Aku - Lur / Dulur (Gaya Akrab Komunitas / Seduluran)">Aku &ndash; Lur / Dulur (Akrab Komunitas)</option>
+            <option value="Gue - Lo / Bro / Guys (Tongkrongan Anak Muda / Kos)">Gue &ndash; Lo / Bro / Guys (Anak Muda/Kos)</option>
+            <option value="Saya - Teman-teman (Sopan & Mengalir)">Saya &ndash; Teman-teman (Sopan/Pekerja)</option>
+          </select>
+        </div>
+        <div style="flex: 1 1 220px;">
+          <label for="storyDepth">Panjang Alur Cerita (Threads &amp; FB):</label>
+          <select id="storyDepth">
+            <option value="3" selected>3 Komentar Cerita + 1 Link (Disarankan)</option>
+            <option value="2">2 Komentar Cerita + 1 Link (Ringkas)</option>
+            <option value="4">4 Komentar Cerita + 1 Link (Mendalam)</option>
+          </select>
+        </div>
+      </div>
+
+      <h3>Pilih Masalah Pembeli untuk Dibuatkan Konten:</h3>
+      <p class="helper-text">Klik tombol <strong>"Buat Konten"</strong> pada salah satu masalah di bawah ini.</p>
+      <div id="problemsList" class="problems-grid">
+        <!-- Kartu masalah diisi oleh JS -->
+      </div>
+    </section>
+
+    <!-- STEP 3: HASIL KONTEN MULTI-PLATFORM -->
+    <section id="contentSection" class="card hidden">
+      <div class="step-badge">Langkah 3</div>
+      <div class="card-header-row">
+        <div>
+          <h2>Konten Siap Posting</h2>
+          <p id="selectedProblemLabel" class="helper-text"></p>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="threads" type="button">🧵 Threads</button>
+        <button class="tab-btn" data-tab="tiktok" type="button">🎵 TikTok</button>
+        <button class="tab-btn" data-tab="facebook" type="button">📘 Facebook</button>
+        <button class="tab-btn" data-tab="whatsapp" type="button">💬 WhatsApp</button>
+      </div>
+
+      <div id="tabContents" class="tab-contents">
+        <!-- Panel Threads -->
+        <div id="tab-threads" class="tab-pane active"></div>
+        <!-- Panel TikTok -->
+        <div id="tab-tiktok" class="tab-pane"></div>
+        <!-- Panel Facebook -->
+        <div id="tab-facebook" class="tab-pane"></div>
+        <!-- Panel WhatsApp -->
+        <div id="tab-whatsapp" class="tab-pane"></div>
+      </div>
+    </section>
+
+    <!-- RIWAYAT LOKAL (TANPA DATABASE) -->
+    <section class="card">
+      <div class="card-header-row">
+        <h2>🗂️ Riwayat Analisis (Tersimpan di Browser)</h2>
+        <button id="clearHistoryBtn" class="btn btn-outline btn-xs" type="button">Bersihkan Riwayat</button>
+      </div>
+      <p class="helper-text small">
+        Data tersimpan otomatis di <code>localStorage</code> browser Anda tanpa perlu sewa database.
+      </p>
+      <div id="historyList" class="history-list">
+        <p class="empty-state">Belum ada riwayat analisis.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer container">
+    <p>Siap di-host gratis di <strong>GitHub Pages</strong> &bull; Menggunakan Google Gemini API langsung dari browser Anda.</p>
+  </footer>
+
+  <div id="toast" class="toast hidden">Teks berhasil disalin!</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
