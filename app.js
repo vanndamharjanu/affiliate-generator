@@ -413,7 +413,7 @@ function renderAnalysisResult(data) {
       </div>
       <div>
         <button type="button" class="btn btn-primary btn-sm generate-content-btn" data-index="${idx}">
-          ✨ Buat Konten dari Masalah Ini (Threads, TikTok, FB, WA)
+          ✨ Buat Konten dari Masalah Ini (Threads, X, TikTok, FB, WA)
         </button>
       </div>
     `;
@@ -445,10 +445,10 @@ async function handleGenerateContentForProblem(problemIndex, buttonEl) {
 
   const originalBtnText = buttonEl.textContent;
   buttonEl.disabled = true;
-  buttonEl.textContent = "⏳ Sedang Meracik Alur Cerita & Konten 4 Platform...";
+  buttonEl.textContent = "⏳ Sedang Meracik Alur Cerita & Konten...";
 
   const prompt = `
-Anda adalah warga medsos Indonesia asli (bukan bot AI) yang jago bikin utas cerita di Threads, FB, dan TikTok yang terasa 100% ketikan manusia asli, organik, dan soft-selling halus.
+Anda adalah warga medsos Indonesia asli (bukan bot AI) yang jago bikin utas cerita di Threads, X (Twitter), FB, dan TikTok yang terasa 100% ketikan manusia asli, organik, dan soft-selling halus.
 
 Konteks Produk & Masalah yang Dipilih:
 - Nama Produk: ${analysis.productName}
@@ -465,28 +465,31 @@ ATURAN KERAS ANTI "AI SLOP" (WAJIB DITAATI AGAR TIDAK TERLIHAT SEPERTI KETIKAN C
    - Dilarang pakai kata/frasa terjemahan kaku seperti: "Pernahkah Anda", "Bayangkan", "Di tengah kesibukan", "Namun jangan khawatir", "Solusi tepat", "Mengubah permainan (game changer)", "Ucapkan selamat tinggal pada", "Tidak dapat dipungkiri", "Mari kita bahas", "Temukan rahasianya", "Hadir sebagai solusi", "Dapatkan segera", "Solusi terbaik".
 2. TANDA BACA & FORMAT MANUSIA ASLI:
    - JANGAN gunakan tanda strip panjang / em-dash ("—") karena itu ciri khas AI. Gunakan koma, titik, atau kurung biasa saja.
-   - JANGAN banjir emoji di tiap ujung kalimat (maksimal 1 emoji per post, atau tanpa emoji di Threads agar terlihat seperti ketikan organik).
+   - JANGAN banjir emoji di tiap ujung kalimat (maksimal 1 emoji per post, atau tanpa emoji di Threads/X agar terlihat seperti ketikan organik).
    - Gunakan bahasa lisan sehari-hari netizen Indonesia yang mengalir natural (contoh kata sambung natural: "padahal", "mana", "jujur", "kemarin sempet", "eh ternyata", "lumayan banget", "gak", "beneran", "awalnya agak ragu").
-3. ATURAN ANTI "ARGH UJUNG-UJUNGNYA AFFILIATE":
+3. ATURAN KHUSUS BATAS KARAKTER THREADS & X (TWITTER):
+   - Agar 1 utas di bagian "threads" bisa langsung dipakai di Threads DAN X (Twitter versi gratis), SETIAP bagian pada "threads" ("mainPost", setiap item di "storyReplies", dan "affiliateReply") WAJIB ringkas dan MAKSIMAL 260 KARAKTER per bagian (termasuk link di bagian terakhir)!
+   - Sedangkan untuk "facebook" boleh lebih panjang (1-2 paragraf mengalir per bagian).
+4. ATURAN ANTI "ARGH UJUNG-UJUNGNYA AFFILIATE":
    - Jangan memuji produk secara berlebihan/lebay. Ceritakan secara jujur dan masuk akal, termasuk ekspektasi awal yang biasa saja tapi ternyata terbantu banget.
-   - Untuk Threads & Facebook, gunakan alur bertahap (Multi-Step Storytelling):
-     * POST UTAMA: Murni curhat/cerita/keresahan sehari-hari yang bikin pembaca ngerasa "lah sama banget", diakhiri pertanyaan santai atau kalimat yang bikin orang lanjut baca komentar. (TANPA merek & TANPA link).
+   - Untuk Threads/X & Facebook, gunakan alur bertahap (Multi-Step Storytelling):
+     * POST UTAMA: Murni curhat/cerita/keresahan sehari-hari yang bikin pembaca ngerasa "lah sama banget", diakhiri pertanyaan santai atau kalimat yang bikin orang lanjut baca komentar/utas. (TANPA merek & TANPA link).
      * KOMENTAR/BALASAN CERITA (Buat tepat ${storyDepth} bagian berurutan di array "storyReplies" / "storyComments"):
        - Bagian awal: Cerita drama/kesalnya waktu masih pakai cara lama yang capek/gagal.
        - Bagian tengah: Bagikan tips praktis gratis dulu biar pembaca dapat manfaat, lalu ceritakan momen waktu akhirnya nyobain pakai alat/produk ini dan detail perubahan kecil yang paling kerasa.
      * KOMENTAR/BALASAN TERAKHIR ("affiliateReply" / "affiliateComment"): Masuk dengan santai seolah sekadar ninggalin jejak buat yang butuh, contoh: "Oiya sebelum pada nanya beli di mana kayak kemarin, aku pakainya yang ini yaa: ${affiliateUrl} (kemarin ambil di toko itu soalnya review fotonya asli semua)."
-4. Untuk TikTok: Berikan Ide Visual sederhana (tanpa harus tampil muka kalau gak mau), Hook 3 detik pertama yang langsung nyentil masalah dengan bahasa lisan, Script Voiceover ngobrol santai, serta Caption + Hashtag.
-5. Untuk WhatsApp: Berikan versi Status WA singkat yang bikin kepo, dan versi cerita akrab untuk Grup/Saluran WA (pakai format *tebal* khas WA seperlunya) + link ${affiliateUrl}.
+5. Untuk TikTok: Berikan Ide Visual sederhana (tanpa harus tampil muka kalau gak mau), Hook 3 detik pertama yang langsung nyentil masalah dengan bahasa lisan, Script Voiceover ngobrol santai, serta Caption + Hashtag.
+6. Untuk WhatsApp: Berikan versi Status WA singkat yang bikin kepo, dan versi cerita akrab untuk Grup/Saluran WA (pakai format *tebal* khas WA seperlunya) + link ${affiliateUrl}.
 
 Kembalikan HANYA JSON valid dengan struktur persis berikut:
 {
   "threads": {
-    "mainPost": "Postingan utama Threads (100% relatable/curhat masalah, tanpa jualan & tanpa link)",
+    "mainPost": "Postingan utama Threads & X (Maks 260 karakter, 100% relatable/curhat masalah, tanpa link)",
     "storyReplies": [
-      "Balasan ke-1 (Lanjutan cerita/agitasi masalah)",
-      "Balasan ke-2 (Tips/titik balik menemukan solusi nyata)"
+      "Balasan ke-1 (Maks 260 karakter, lanjutan cerita/agitasi masalah)",
+      "Balasan ke-2 (Maks 260 karakter, tips/titik balik menemukan solusi nyata)"
     ],
-    "affiliateReply": "Balasan terakhir (Soft-selling kasual + link affiliate ${affiliateUrl})"
+    "affiliateReply": "Balasan terakhir (Maks 260 karakter, soft-selling kasual + link affiliate ${affiliateUrl})"
   },
   "tiktok": {
     "visualIdea": "Ide visual pengambilan video sederhana tanpa ribet",
@@ -507,7 +510,7 @@ Kembalikan HANYA JSON valid dengan struktur persis berikut:
     "broadcastText": "Teks cerita akrab untuk grup/saluran/japri WA dengan format *tebal* khas WA + link ${affiliateUrl}"
   }
 }
-Pastikan jumlah item di dalam array "storyReplies" (Threads) dan "storyComments" (Facebook) masing-masing berjumlah tepat ${storyDepth} item!
+Pastikan jumlah item di dalam array "storyReplies" (Threads & X) dan "storyComments" (Facebook) masing-masing berjumlah tepat ${storyDepth} item!
 `.trim();
 
   try {
@@ -531,24 +534,26 @@ Pastikan jumlah item di dalam array "storyReplies" (Threads) dan "storyComments"
 function renderGeneratedContent(problem, content) {
   selectedProblemLabel.innerHTML = `Berdasarkan Masalah: <strong>"${escapeHtml(problem.title)}"</strong>`;
 
-  // 1. Threads (Main Post + Multi-step Story Replies + Final Soft-Sell Affiliate Reply)
+  // 1. Threads & X (Main Post + Multi-step Story Replies + Final Soft-Sell Affiliate Reply)
   const threadsReplies = Array.isArray(content.threads?.storyReplies)
     ? content.threads.storyReplies
     : [];
   const threadsAffiliate = content.threads?.affiliateReply || content.threads?.firstReply || "";
+  const mainThreadText = content.threads?.mainPost || "";
 
   let threadsHtml = createCopyBlock(
-    "🧵 Postingan Utama Threads (Pemicu Masalah & Diskusi — Tanpa Link)",
-    content.threads?.mainPost
+    `🧵 Post Utama Threads & X (${mainThreadText.length}/280 kar — Tanpa Link)`,
+    mainThreadText
   );
   threadsReplies.forEach((replyText, idx) => {
+    const len = (replyText || "").length;
     threadsHtml += createCopyBlock(
-      `💬 Balasan Utas ke-${idx + 1} (Alur Cerita & Value — Tanpa Link)`,
+      `💬 Balasan Utas ke-${idx + 1} (${len}/280 kar — Alur Cerita & Value)`,
       replyText
     );
   });
   threadsHtml += createCopyBlock(
-    `🔗 Balasan Terakhir / ke-${threadsReplies.length + 1} (Soft-Selling Halus + Link Affiliate)`,
+    `🔗 Balasan Terakhir / ke-${threadsReplies.length + 1} (${threadsAffiliate.length}/280 kar — Soft-Selling + Link)`,
     threadsAffiliate
   );
   document.getElementById("tab-threads").innerHTML = threadsHtml;
