@@ -563,6 +563,122 @@ select:focus {
   z-index: 100;
 }
 
+.generate-content-btn {
+  width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+  padding: 10px 14px;
+}
+
+.copy-btn {
+  flex-shrink: 0;
+}
+
+/* Optimasi Responsif Khusus Layar HP (Mobile) */
+@media (max-width: 640px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .app-header {
+    padding: 12px 0;
+  }
+
+  .brand h1 {
+    font-size: 1rem;
+  }
+
+  .brand p {
+    font-size: 0.75rem;
+  }
+
+  #toggleApiModalBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card {
+    padding: 16px 14px;
+  }
+
+  /* Cegah auto-zoom di iPhone/Safari saat klik input & perbesar area sentuh */
+  input[type="text"],
+  input[type="url"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px;
+    padding: 11px 12px;
+  }
+
+  .form-row > * {
+    flex: 1 1 100% !important;
+  }
+
+  .input-with-action {
+    flex-direction: column;
+  }
+
+  .input-with-action .btn {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .problem-header {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    border-bottom: none;
+  }
+
+  .tab-btn {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    background: var(--surface-alt);
+  }
+
+  .tab-btn.active {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .content-block-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 9px;
+    font-size: 0.85rem;
+  }
+
+  .history-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .history-item .btn {
+    width: 100%;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    text-align: center;
+  }
+}
+
 .hidden {
   display: none !important;
 }
