@@ -18,7 +18,7 @@
       </div>
       <button id="toggleApiModalBtn" class="btn btn-outline btn-sm" type="button">
         <span id="apiStatusDot" class="status-dot"></span>
-        Pengaturan API Key
+        <span id="apiHeaderBtnText">Pengaturan API Key</span>
       </button>
     </div>
   </header>
@@ -31,24 +31,61 @@
         <button id="closeApiPanelBtn" class="btn-icon" type="button" title="Tutup">&times;</button>
       </div>
       <p class="helper-text">
-        API Key disimpan <strong>hanya di browser perangkat Anda (LocalStorage)</strong>. Aman untuk di-hosting di GitHub Pages tanpa takut API Key bocor ke publik.
+        API Key disimpan <strong>hanya di browser perangkat Anda (LocalStorage)</strong>. Anda juga bisa memasukkan <strong>lebih dari 1 API Key</strong> (pisahkan dengan koma <code>,</code>) untuk rotasi otomatis saat kuota habis.
       </p>
       <div class="form-row">
         <input
           type="password"
           id="apiKeyInput"
-          placeholder="Tempel Gemini API Key dari Google AI Studio (AIzaSy...)"
+          placeholder="Tempel API Key (AIzaSy...) — pisahkan koma jika lebih dari 1 key"
           autocomplete="off"
         />
         <select id="modelSelect" title="Pilih Model Gemini">
-          <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Cepat &amp; Kuota Gratis Besar)</option>
-          <option value="gemini-2.5-pro">Gemini 2.5 Pro (Penalaran Lebih Dalam)</option>
-          <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Hemat Kuota)</option>
+          <optgroup label="🔥 Seri Gemini 3.5 &amp; 3.8 (Terbaru)">
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Cepat &amp; Kuota Longgar)</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash (Cepat &amp; Natural)</option>
+            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (Super Hemat Kuota)</option>
+            <option value="gemini-3-flash-preview">Gemini 3.0 Flash Preview</option>
+            <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash-Lite Preview</option>
+          </optgroup>
+          <optgroup label="⚡ Seri Gemini 2.5 &amp; 2.0 (Stabil)">
+            <option value="gemini-2.5-flash-lite" selected>Gemini 2.5 Flash-Lite (Hemat Kuota Harian)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Standar - Limit 20/hari Free)</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Penalaran Mendalam)</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Kuota Terpisah)</option>
+          </optgroup>
+          <optgroup label="🔄 Alias Otomatis Google">
+            <option value="gemini-flash-latest">Gemini Flash Latest (Otomatis Versi Terbaru)</option>
+            <option value="gemini-flash-lite-latest">Gemini Flash-Lite Latest (Otomatis Lite Terbaru)</option>
+            <option value="custom">✏️ Ketik Kode Model Sendiri (Custom)...</option>
+          </optgroup>
         </select>
         <button id="saveApiKeyBtn" class="btn btn-primary" type="button">Simpan Key</button>
       </div>
+
+      <div id="customModelRow" class="form-row hidden" style="margin-top: 8px;">
+        <input
+          type="text"
+          id="customModelInput"
+          placeholder="Contoh: gemini-3.8-flash atau gemini-3.5-pro"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="api-extra-controls">
+        <label class="checkbox-label">
+          <input type="checkbox" id="autoFallbackCheckbox" checked />
+          <span><strong>Anti-Limit Otomatis (Auto-Fallback):</strong> Otomatis pindah ke model cadangan &amp; key berikutnya jika terkena limit kuota harian (Error 429) atau model belum aktif di key tersebut.</span>
+        </label>
+        <button id="syncModelsBtn" class="btn btn-secondary btn-xs" type="button">
+          🔄 Cek &amp; Muat Model dari API Key
+        </button>
+      </div>
+
+      <div id="apiModelStatus" class="status-msg" style="margin-top: 8px;"></div>
+
       <p class="helper-text small">
-        Belum punya key? Ambil gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+        Belum punya key? Ambil gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>. (Tips: Buat API Key di <em>New Project</em> jika ingin menambah kuota harian baru).
       </p>
     </section>
 

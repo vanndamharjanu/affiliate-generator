@@ -1,7 +1,23 @@
 // State & Storage Keys
 const STORAGE_KEY_API = "pas_affiliate_gemini_api_key";
 const STORAGE_KEY_MODEL = "pas_affiliate_gemini_model";
+const STORAGE_KEY_CUSTOM_MODEL = "pas_affiliate_gemini_custom_model";
+const STORAGE_KEY_AUTO_FALLBACK = "pas_affiliate_gemini_auto_fallback";
+const STORAGE_KEY_DISCOVERED_MODELS = "pas_affiliate_gemini_discovered_models";
 const STORAGE_KEY_HISTORY = "pas_affiliate_history_v1";
+
+const DEFAULT_FALLBACK_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite-preview",
+  "gemini-3-flash-preview",
+  "gemini-2.5-flash-lite",
+  "gemini-flash-lite-latest",
+  "gemini-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash",
+];
 
 let currentState = {
   affiliateUrl: "",
@@ -19,6 +35,12 @@ const toggleApiModalBtn = document.getElementById("toggleApiModalBtn");
 const closeApiPanelBtn = document.getElementById("closeApiPanelBtn");
 const apiKeyInput = document.getElementById("apiKeyInput");
 const modelSelect = document.getElementById("modelSelect");
+const customModelRow = document.getElementById("customModelRow");
+const customModelInput = document.getElementById("customModelInput");
+const autoFallbackCheckbox = document.getElementById("autoFallbackCheckbox");
+const syncModelsBtn = document.getElementById("syncModelsBtn");
+const apiModelStatus = document.getElementById("apiModelStatus");
+const apiHeaderBtnText = document.getElementById("apiHeaderBtnText");
 const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
 const apiStatusDot = document.getElementById("apiStatusDot");
 
@@ -802,11 +824,101 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
 });
 
+function getSavedDiscoveredModels() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY_DISCOVERED_MODELS) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function renderDiscoveredModelsInDropdown(models = []) {
+  const existingGroup = document.getElementById("discoveredModelsGroup");
+  if (existingGroup) existingGroup.remove();
+
+  if (!models.length) return;
+
+  const group = document.createElement("optgroup");
+  group.id = "discoveredModelsGroup";
+  group.label = "✅ Model Terdeteksi Aktif di API Key Anda";
+
+  // Put already-existing static options check so we still let them appear in discovered or avoid duplicate confusion
+  models.forEach((m) => {
+    // Only add to discovered group if not already in standard options, OR add all discovered so user sees what's verified
+    const existsInStatic = Array.from(modelSelect.querySelectorAll("option")).some(
+      (opt) => opt.value === m.id
+    );
+    if (!existsInStatic) {
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = `${m.displayName || m.id} (${m.id})`;
+      group.appendChild(opt);
+    }
+  });
+
+  if (group.children.length > 0) {
+    modelSelect.insertBefore(group, modelSelect.firstChild);
+  }
+}
+
+function getEffectiveSelectedModel() {
+  const selected = localStorage.getItem(STORAGE_KEY_MODEL) || "gemini-2.5-flash-lite";
+  if (selected === "custom") {
+    return (localStorage.getItem(STORAGE_KEY_CUSTOM_MODEL) || "gemini-3.8-flash").trim();
+  }
+  return selected;
+}
+
+function parseApiKeys(rawKeyStr = "") {
+  return rawKeyStr
+    .split(/[\s,;]+/)
+    .map((k) => k.trim())
+    .filter(Boolean);
+}
+
+function updateHeaderBadge(activeModel) {
+  if (!apiHeaderBtnText) return;
+  const keys = parseApiKeys(localStorage.getItem(STORAGE_KEY_API) || "");
+  if (!keys.length) {
+    apiHeaderBtnText.textContent = "Pengaturan API Key";
+    return;
+  }
+  const modelLabel = activeModel || getEffectiveSelectedModel();
+  const keyBadge = keys.length > 1 ? ` (${keys.length} Key)` : "";
+  apiHeaderBtnText.textContent = `API: ${modelLabel}${keyBadge}`;
+}
+
 function loadApiConfig() {
   const savedKey = localStorage.getItem(STORAGE_KEY_API) || "";
-  const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || "gemini-2.5-flash";
+  const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || "gemini-2.5-flash-lite";
+  const savedCustomModel = localStorage.getItem(STORAGE_KEY_CUSTOM_MODEL) || "";
+  const savedAutoFallback = localStorage.getItem(STORAGE_KEY_AUTO_FALLBACK);
+  const discovered = getSavedDiscoveredModels();
+
+  renderDiscoveredModelsInDropdown(discovered);
+
   apiKeyInput.value = savedKey;
-  modelSelect.value = savedModel;
+
+  // Ensure savedModel exists in dropdown, otherwise fallback or add it
+  const hasOption = Array.from(modelSelect.options).some((opt) => opt.value === savedModel);
+  if (hasOption) {
+    modelSelect.value = savedModel;
+  } else if (savedModel) {
+    modelSelect.value = "custom";
+    customModelInput.value = savedModel;
+  }
+
+  if (savedCustomModel && !customModelInput.value) {
+    customModelInput.value = savedCustomModel;
+  }
+
+  if (customModelRow) {
+    customModelRow.classList.toggle("hidden", modelSelect.value !== "custom");
+  }
+
+  if (autoFallbackCheckbox) {
+    autoFallbackCheckbox.checked = savedAutoFallback === null ? true : savedAutoFallback === "true";
+  }
 
   if (savedKey) {
     apiStatusDot.classList.add("connected");
@@ -814,6 +926,85 @@ function loadApiConfig() {
   } else {
     apiStatusDot.classList.remove("connected");
     apiPanel.classList.remove("hidden");
+  }
+
+  updateHeaderBadge();
+}
+
+async function syncModelsFromApiKey(silent = false) {
+  const keys = parseApiKeys(apiKeyInput.value.trim() || localStorage.getItem(STORAGE_KEY_API) || "");
+  if (!keys.length) {
+    if (!silent && apiModelStatus) {
+      apiModelStatus.textContent = "⚠️ Masukkan API Key terlebih dahulu untuk mengecek daftar model.";
+      apiModelStatus.style.color = "#dc2626";
+    }
+    return [];
+  }
+
+  if (syncModelsBtn) {
+    syncModelsBtn.disabled = true;
+    syncModelsBtn.textContent = "⏳ Mengecek Model...";
+  }
+  if (!silent && apiModelStatus) {
+    apiModelStatus.textContent = "Menghubungi Google AI Studio untuk mengecek model yang aktif di API Key Anda...";
+    apiModelStatus.style.color = "#64748b";
+  }
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(keys[0])}`
+    );
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `HTTP ${resp.status}`);
+    }
+    const data = await resp.json();
+    const rawModels = Array.isArray(data.models) ? data.models : [];
+
+    // Filter generative text/multimodal Gemini models
+    const validModels = rawModels
+      .filter((m) => {
+        const name = m.name || "";
+        const methods = m.supportedGenerationMethods || [];
+        const isGemini = name.startsWith("models/gemini-");
+        const canGenerate = methods.includes("generateContent");
+        const isSpecializedNonText =
+          name.includes("-tts") ||
+          name.includes("-image") ||
+          name.includes("embedding") ||
+          name.includes("aqa") ||
+          name.includes("robotics") ||
+          name.includes("computer-use");
+        return isGemini && canGenerate && !isSpecializedNonText;
+      })
+      .map((m) => ({
+        id: m.name.replace(/^models\//, ""),
+        displayName: m.displayName || m.name.replace(/^models\//, ""),
+      }));
+
+    localStorage.setItem(STORAGE_KEY_DISCOVERED_MODELS, JSON.stringify(validModels));
+    renderDiscoveredModelsInDropdown(validModels);
+
+    if (apiModelStatus) {
+      const modelIds = validModels.map((m) => m.id).slice(0, 8).join(", ");
+      apiModelStatus.textContent = `✅ API Key Valid! Terdeteksi ${validModels.length} model aktif (contoh: ${modelIds}).`;
+      apiModelStatus.style.color = "#16a34a";
+    }
+    if (!silent) {
+      showToast(`✅ Berhasil memuat ${validModels.length} model dari API Key!`);
+    }
+    return validModels;
+  } catch (err) {
+    if (!silent && apiModelStatus) {
+      apiModelStatus.textContent = `❌ Gagal mengecek model: ${err.message}`;
+      apiModelStatus.style.color = "#dc2626";
+    }
+    return [];
+  } finally {
+    if (syncModelsBtn) {
+      syncModelsBtn.disabled = false;
+      syncModelsBtn.textContent = "🔄 Cek & Muat Model dari API Key";
+    }
   }
 }
 
@@ -826,17 +1017,46 @@ function setupEventListeners() {
     apiPanel.classList.add("hidden");
   });
 
-  saveApiKeyBtn.addEventListener("click", () => {
+  modelSelect.addEventListener("change", () => {
+    if (customModelRow) {
+      customModelRow.classList.toggle("hidden", modelSelect.value !== "custom");
+      if (modelSelect.value === "custom") {
+        customModelInput.focus();
+      }
+    }
+  });
+
+  if (syncModelsBtn) {
+    syncModelsBtn.addEventListener("click", () => {
+      syncModelsFromApiKey(false);
+    });
+  }
+
+  saveApiKeyBtn.addEventListener("click", async () => {
     const key = apiKeyInput.value.trim();
     const model = modelSelect.value;
+    const customModel = customModelInput ? customModelInput.value.trim() : "";
+    const autoFallback = autoFallbackCheckbox ? autoFallbackCheckbox.checked : true;
+
     if (!key) {
       alert("Silakan masukkan Gemini API Key dari Google AI Studio terlebih dahulu.");
       return;
     }
+    if (model === "custom" && !customModel) {
+      alert("Silakan ketik kode model custom (misal: gemini-3.8-flash).");
+      customModelInput.focus();
+      return;
+    }
+
     localStorage.setItem(STORAGE_KEY_API, key);
     localStorage.setItem(STORAGE_KEY_MODEL, model);
+    localStorage.setItem(STORAGE_KEY_CUSTOM_MODEL, customModel);
+    localStorage.setItem(STORAGE_KEY_AUTO_FALLBACK, String(autoFallback));
+
+    // Sync available models in background when saving key
+    await syncModelsFromApiKey(true);
     loadApiConfig();
-    showToast("API Key berhasil disimpan di browser!");
+    showToast("✅ Konfigurasi API Key & Model berhasil disimpan!");
   });
 
   // Auto-extract slug when pasting Shopee URL
@@ -1002,12 +1222,14 @@ function clearImage() {
   dropZonePrompt.classList.remove("hidden");
 }
 
-// Gemini API Helper
+// Gemini API Helper (with Multi-Key & Auto-Fallback Model Support)
 async function callGeminiJson(promptText, includeImage = false) {
-  const apiKey = localStorage.getItem(STORAGE_KEY_API);
-  const model = localStorage.getItem(STORAGE_KEY_MODEL) || "gemini-2.5-flash";
+  const rawApiKeys = localStorage.getItem(STORAGE_KEY_API) || "";
+  const apiKeys = parseApiKeys(rawApiKeys);
+  const primaryModel = getEffectiveSelectedModel();
+  const autoFallback = localStorage.getItem(STORAGE_KEY_AUTO_FALLBACK) !== "false";
 
-  if (!apiKey) {
+  if (!apiKeys.length) {
     apiPanel.classList.remove("hidden");
     apiKeyInput.focus();
     throw new Error("Silakan masukkan Gemini API Key terlebih dahulu di panel Pengaturan API Key.");
@@ -1023,35 +1245,105 @@ async function callGeminiJson(promptText, includeImage = false) {
     });
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-    apiKey
-  )}`;
+  // Build ordered unique list of candidate models
+  const discoveredIds = getSavedDiscoveredModels()
+    .map((m) => m.id)
+    .filter((id) => id.includes("flash"));
+  const candidateModels = [primaryModel];
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: {
-        temperature: 0.7,
-        responseMimeType: "application/json",
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const errMsg = errData?.error?.message || `HTTP Error ${response.status}`;
-    throw new Error(`Gagal memanggil Gemini API: ${errMsg}`);
+  if (autoFallback) {
+    [...DEFAULT_FALLBACK_MODELS, ...discoveredIds].forEach((m) => {
+      if (m && !candidateModels.includes(m)) {
+        candidateModels.push(m);
+      }
+    });
   }
 
-  const result = await response.json();
-  const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!rawText) {
-    throw new Error("Respons AI kosong. Coba ulangi lagi.");
+  let lastErrorMsg = "";
+
+  for (let keyIdx = 0; keyIdx < apiKeys.length; keyIdx++) {
+    const currentKey = apiKeys[keyIdx];
+
+    for (let modelIdx = 0; modelIdx < candidateModels.length; modelIdx++) {
+      const currentModel = candidateModels[modelIdx];
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(
+        currentKey
+      )}`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: {
+              temperature: 0.7,
+              responseMimeType: "application/json",
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || `HTTP Error ${response.status}`;
+          lastErrorMsg = `[${currentModel}] ${errMsg}`;
+
+          // Check if error is retriable via fallback model or next API key (429 Quota, 404 Not Found, 400 Invalid Model, 503 Overloaded)
+          const isQuotaOrOverload = response.status === 429 || response.status === 503 || response.status === 500;
+          const isModelUnsupported =
+            response.status === 404 ||
+            (response.status === 400 && /model|not found|not supported/i.test(errMsg));
+
+          if (autoFallback && (isQuotaOrOverload || isModelUnsupported)) {
+            console.warn(`Fallback dari ${currentModel} (Status ${response.status}): ${errMsg}`);
+            continue;
+          }
+
+          // If invalid API key (401/403) and user has multiple keys, break model loop to try next key
+          if ((response.status === 401 || response.status === 403) && keyIdx < apiKeys.length - 1) {
+            break;
+          }
+
+          throw new Error(`Gagal memanggil Gemini API: ${lastErrorMsg}`);
+        }
+
+        const result = await response.json();
+        const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) {
+          lastErrorMsg = `[${currentModel}] Respons AI kosong.`;
+          if (autoFallback) continue;
+          throw new Error("Respons AI kosong. Coba ulangi lagi.");
+        }
+
+        // Clean possible markdown code fences before parsing JSON
+        const cleanedJson = rawText
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/, "")
+          .trim();
+
+        const parsed = JSON.parse(cleanedJson);
+
+        // Notify user if fallback model or backup key was used
+        updateHeaderBadge(currentModel);
+        if (currentModel !== primaryModel || keyIdx > 0) {
+          const keyInfo = keyIdx > 0 ? ` (Key Cadangan #${keyIdx + 1})` : "";
+          showToast(`⚡ Otomatis beralih ke model: ${currentModel}${keyInfo}`);
+        }
+
+        return parsed;
+      } catch (err) {
+        lastErrorMsg = err.message || String(err);
+        if (!autoFallback) {
+          throw err;
+        }
+      }
+    }
   }
 
-  return JSON.parse(rawText);
+  throw new Error(
+    `Semua model/kuota API Key sedang mencapai batas limit.\nDetail terakhir: ${lastErrorMsg}\n\nTips: Coba masukkan API Key dari project baru di Pengaturan API Key.`
+  );
 }
 
 // STEP 1: Analyze Product -> Output Buyer Problems & Niche
